@@ -42,8 +42,13 @@ end
 if settings.MaxPerformance then
     settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
     for _, v in pairs(workspace:GetDescendants()) do
-        if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic v.Reflectance = 0 end
-        if v:IsA("Decal") or v:IsA("Texture") then v:Destroy() end
+        if v:IsA("BasePart") then
+            v.Material = Enum.Material.SmoothPlastic
+            v.Reflectance = 0
+        end
+        if v:IsA("Decal") or v:IsA("Texture") then
+            v:Destroy()
+        end
     end
 end
 
@@ -61,7 +66,6 @@ if settings.AntiDrown then
     end)
 end
 
--- GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "ThamerFruitGui"
 
@@ -81,7 +85,6 @@ mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
 mainFrame.BorderSizePixel = 1
 mainFrame.Visible = false
-
 local function createToggle(name, default, pos)
     local btn = Instance.new("TextButton", mainFrame)
     btn.Size = UDim2.new(0, 280, 0, 30)
@@ -109,7 +112,6 @@ toggleButton.MouseButton1Click:Connect(function()
     toggleButton.Text = mainFrame.Visible and "إغلاق" or "فتح"
 end)
 
--- الفواكه
 local function notify(text)
     game.StarterGui:SetCore("SendNotification", {
         Title = "فاكهة!",
@@ -161,7 +163,6 @@ local function collectFruits()
         end
     end
 end
-
 local function serverHop()
     local pid = game.PlaceId
     local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. pid .. "/servers/Public?limit=100&sortOrder=Asc")).data
@@ -180,7 +181,8 @@ task.spawn(function()
             local found = false
             for _, obj in pairs(workspace:GetDescendants()) do
                 if obj:IsA("Tool") and string.lower(obj.Name):find("fruit") then
-                    found = true break
+                    found = true
+                    break
                 end
             end
             if not found and settings.AutoHop then
@@ -192,7 +194,11 @@ end)
 
 -- إعادة تشغيل تلقائي بعد السيرفر هوب
 local ScriptURL = "https://raw.githubusercontent.com/2tt7t/bloxfruit-scripts/main/autofruit.lua"
-local queue_on_teleport = queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport
+local queue_on_teleport =
+    queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport
 if queue_on_teleport then
-    queue_on_teleport('loadstring(game:HttpGet("'..ScriptURL..'"))()')
+    queue_on_teleport('loadstring(game:HttpGet("' .. ScriptURL .. '"))()')
 end
+
+-- نهاية السكربت
+print("تم تشغيل سكربت ثامر بنجاح")
