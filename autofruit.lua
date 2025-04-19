@@ -1,135 +1,209 @@
-getgenv().AutoCollect = true
-getgenv().AutoHop = true
+local HttpService = game:GetService("HttpService")
+local TeleportService = game:GetService("TeleportService")
+local Players = game:GetService("Players")
+local LocalPlayer = Players.LocalPlayer
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
--- شاشة المعلومات
+-- ملف الحفظ
+local configFile = "thamer_config.json"
+local settings = {
+    AutoCollect = true,
+    AutoHop = false,
+    MaxPerformance = true,
+    AntiAFK = true,
+    AntiDrown = true
+}
+
+-- تحميل الإعدادات من الملف
+if isfile and readfile and isfile(configFile) then
+    local success, data = pcall(function()
+        return HttpService:JSONDecode(readfile(configFile))
+    end)
+    if success and typeof(data) == "table" then
+        for k, v in pairs(data) do
+            settings[k] = v
+        end
+    end
+end
+
+-- حفظ الإعدادات
+local function saveSettings()
+    if writefile then
+        writefile(configFile, HttpService:JSONEncode(settings))
+    end
+end
+
+-- حماية من الطرد AFK
+if settings.AntiAFK then
+    game:GetService("VirtualInputManager"):SendKeyEvent(true, "Space", false, game)
+    task.spawn(function()
+        while true do
+            wait(170)
+            game:GetService("VirtualInputManager"):SendKeyEvent(true, "Space", false, game)
+        end
+    end)
+end
+
+-- تحسين الأداء
+if settings.MaxPerformance then
+    settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
+    for _, v in pairs(workspace:GetDescendants()) do
+        if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic v.Reflectance = 0 end
+        if v:IsA("Decal") or v:IsA("Texture") then v:Destroy() end
+    end
+end
+
+-- حماية من الغرق
+if settings.AntiDrown then
+    task.spawn(function()
+        while true do
+            wait(1)
+            local char = LocalPlayer.Character
+            if char and char:FindFirstChild("HumanoidRootPart") then
+                if char.HumanoidRootPart.Position.Y < -10 then
+                    char.HumanoidRootPart.Velocity = Vector3.new(0, 100, 0)
+                end
+            end
+        end
+    end)
+end
+
+-- واجهة GUI وزر فتح/إغلاق
 local gui = Instance.new("ScreenGui", game.CoreGui)
+gui.Name = "ThamerFruitGui"
 
-local infoLabel = Instance.new("TextLabel", gui)
-infoLabel.Size = UDim2.new(0, 400, 0, 100)
-infoLabel.Position = UDim2.new(0, 10, 0, 10)
-infoLabel.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-infoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-infoLabel.TextScaled = true
-infoLabel.Font = Enum.Font.SourceSansBold
-infoLabel.Text = "Waiting..."
+local toggleButton = Instance.new("TextButton", gui)
+toggleButton.Size = UDim2.new(0, 80, 0, 30)
+toggleButton.Position = UDim2.new(0, 10, 0, 200)
+toggleButton.Text = "فتح"
+toggleButton.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
+toggleButton.TextColor3 = Color3.new(1, 1, 1)
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.TextSize = 14
 
--- زر تفعيل AutoCollect
-local btn1 = Instance.new("TextButton", gui)
-btn1.Size = UDim2.new(0, 200, 0, 40)
-btn1.Position = UDim2.new(0, 10, 0, 120)
-btn1.Text = "Auto Collect: ON"
-btn1.BackgroundColor3 = Color3.fromRGB(0, 150, 0)
-btn1.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn1.Font = Enum.Font.SourceSansBold
-btn1.TextSize = 18
-btn1.MouseButton1Click:Connect(function()
-	getgenv().AutoCollect = not getgenv().AutoCollect
-	btn1.Text = "Auto Collect: " .. (getgenv().AutoCollect and "ON" or "OFF")
-end)
-
--- زر تفعيل AutoHop
-local btn2 = Instance.new("TextButton", gui)
-btn2.Size = UDim2.new(0, 200, 0, 40)
-btn2.Position = UDim2.new(0, 10, 0, 170)
-btn2.Text = "Auto Hop: ON"
-btn2.BackgroundColor3 = Color3.fromRGB(150, 0, 0)
-btn2.TextColor3 = Color3.fromRGB(255, 255, 255)
-btn2.Font = Enum.Font.SourceSansBold
-btn2.TextSize = 18
-btn2.MouseButton1Click:Connect(function()
-	getgenv().AutoHop = not getgenv().AutoHop
-	btn2.Text = "Auto Hop: " .. (getgenv().AutoHop and "ON" or "OFF")
-end)
-
--- ESP
-local function createESP(obj, text)
-	local BillboardGui = Instance.new("BillboardGui")
-	local NameLabel = Instance.new("TextLabel")
-	BillboardGui.Name = "FruitESP"
-	BillboardGui.Parent = obj
-	BillboardGui.Adornee = obj
-	BillboardGui.Size = UDim2.new(0, 100, 0, 40)
-	BillboardGui.AlwaysOnTop = true
-	NameLabel.Parent = BillboardGui
-	NameLabel.Size = UDim2.new(1, 0, 1, 0)
-	NameLabel.BackgroundTransparency = 1
-	NameLabel.Text = text
-	NameLabel.TextColor3 = Color3.fromRGB(255, 0, 0)
-	NameLabel.TextScaled = true
-	NameLabel.Font = Enum.Font.SourceSansBold
+local mainFrame = Instance.new("Frame", gui)
+mainFrame.Size = UDim2.new(0, 300, 0, 250)
+mainFrame.Position = UDim2.new(0, 10, 0, 240)
+mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
+mainFrame.BorderSizePixel = 1
+mainFrame.Visible = falselocal function createToggle(name, default, pos, callback)
+    local btn = Instance.new("TextButton", mainFrame)
+    btn.Size = UDim2.new(0, 280, 0, 30)
+    btn.Position = UDim2.new(0, 10, 0, pos)
+    btn.BackgroundColor3 = Color3.fromRGB(50, 0, 0)
+    btn.TextColor3 = Color3.new(1, 1, 1)
+    btn.Font = Enum.Font.Gotham
+    btn.TextSize = 14
+    btn.Text = name .. ": " .. (default and "ON" or "OFF")
+    btn.MouseButton1Click:Connect(function()
+        settings[name] = not settings[name]
+        btn.Text = name .. ": " .. (settings[name] and "ON" or "OFF")
+        saveSettings()
+        if callback then callback(settings[name]) end
+    end)
 end
 
--- تحديث المعلومات
-function updateInfo()
-	local plr = game.Players.LocalPlayer
-	local char = plr.Character or plr.CharacterAdded:Wait()
-	local hrp = char:FindFirstChild("HumanoidRootPart")
-	local fruitList = {}
-	for _, obj in pairs(game.Workspace:GetDescendants()) do
-		if obj:IsA("Tool") and string.find(obj.Name:lower(), "fruit") then
-			local dist = hrp and math.floor((hrp.Position - obj.Position).Magnitude) or 0
-			table.insert(fruitList, obj.Name .. " (" .. dist .. "m)")
-			if not obj:FindFirstChild("FruitESP") then
-				createESP(obj, obj.Name .. " (" .. dist .. "m)")
-			else
-				obj.FruitESP.TextLabel.Text = obj.Name .. " (" .. dist .. "m)"
-			end
-		end
-	end
-	if #fruitList > 0 then
-		infoLabel.Text = "Fruits: " .. #fruitList .. "\n" .. table.concat(fruitList, ", ")
-	else
-		infoLabel.Text = "No fruits found"
-	end
-end
+-- أزرار القائمة
+createToggle("AutoCollect", settings.AutoCollect, 10)
+createToggle("AutoHop", settings.AutoHop, 50)
+createToggle("MaxPerformance", settings.MaxPerformance, 90)
+createToggle("AntiAFK", settings.AntiAFK, 130)
+createToggle("AntiDrown", settings.AntiDrown, 170)
 
--- السيرفر هوب
-function serverHop()
-	local HttpService = game:GetService("HttpService")
-	local TeleportService = game:GetService("TeleportService")
-	local PlaceId = game.PlaceId
-	local found = false
-	local cursor = ""
-	repeat
-		local req = game:HttpGet("https://games.roblox.com/v1/games/" .. PlaceId .. "/servers/Public?limit=100&sortOrder=Asc&cursor=" .. cursor)
-		local data = HttpService:JSONDecode(req)
-		for _, v in pairs(data.data) do
-			if v.playing < v.maxPlayers and v.id ~= game.JobId then
-				TeleportService:TeleportToPlaceInstance(PlaceId, v.id, game.Players.LocalPlayer)
-				found = true
-				break
-			end
-		end
-		cursor = data.nextPageCursor or ""
-	until found or cursor == ""
-end
-
--- المهام الرئيسية
-spawn(function()
-	while wait(5) do
-		updateInfo()
-		local found = false
-		for _, obj in pairs(game.Workspace:GetDescendants()) do
-			if obj:IsA("Tool") and string.find(obj.Name:lower(), "fruit") then
-				found = true
-				if getgenv().AutoCollect then
-					game.Players.LocalPlayer.Character.Humanoid:EquipTool(obj)
-					wait(1)
-					game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("StoreFruit", obj.Name)
-				end
-				break
-			end
-		end
-		if not found and getgenv().AutoHop then
-			wait(1)
-			serverHop()
-		end
-	end
+-- زر إغلاق القائمة
+toggleButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = not mainFrame.Visible
+    toggleButton.Text = mainFrame.Visible and "إغلاق" or "فتح"
 end)
 
--- إعادة التشغيل تلقائياً بعد السيرفر هوب
-local ScriptURL = "https://raw.githubusercontent.com/2tt7t/bloxfruit-scripts/main/autofruit.lua"
-local queue_on_teleport = queue_on_teleport or syn and syn.queue_on_teleport or queueonteleport or fluxus and fluxus.queue_on_teleport
+-- تنبيه + ESP + تجميع + هوب
+local function notify(text)
+    game.StarterGui:SetCore("SendNotification", {
+        Title = "تنبيه فاكهة",
+        Text = text,
+        Duration = 5
+    })
+end
+
+local function createESP(obj, label)
+    local gui = Instance.new("BillboardGui", obj)
+    gui.Name = "FruitESP"
+    gui.Size = UDim2.new(0, 100, 0, 40)
+    gui.AlwaysOnTop = true
+    gui.Adornee = obj
+    local txt = Instance.new("TextLabel", gui)
+    txt.Size = UDim2.new(1, 0, 1, 0)
+    txt.BackgroundTransparency = 1
+    txt.Text = label
+    txt.TextColor3 = Color3.fromRGB(255, 0, 0)
+    txt.TextScaled = true
+    txt.Font = Enum.Font.GothamBold
+end
+
+local function flyTo(pos)
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    if not hrp then return end
+    for i = 1, 20 do
+        hrp.CFrame = hrp.CFrame:Lerp(CFrame.new(pos), 0.25)
+        wait(0.01)
+    end
+end
+
+local function collectFruits()
+    local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
+    for _, obj in pairs(workspace:GetDescendants()) do
+        if obj:IsA("Tool") and obj:FindFirstChild("Handle") and string.lower(obj.Name):find("fruit") then
+            local dist = (hrp.Position - obj.Handle.Position).Magnitude
+            notify(obj.Name .. " (" .. math.floor(dist) .. "m)")
+            if not obj:FindFirstChild("FruitESP") then
+                createESP(obj, obj.Name .. " (" .. math.floor(dist) .. "m)")
+            end
+            if settings.AutoCollect then
+                flyTo(obj.Handle.Position)
+                LocalPlayer.Character:WaitForChild("Humanoid"):EquipTool(obj)
+                wait(1)
+                ReplicatedStorage.Remotes.CommF_:InvokeServer("StoreFruit", obj.Name)
+                wait(1)
+            end
+        end
+    end
+end
+
+local function serverHop()
+    local pid = game.PlaceId
+    local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. pid .. "/servers/Public?limit=100&sortOrder=Asc")).data
+    for _, v in pairs(servers) do
+        if v.playing < v.maxPlayers and v.id ~= game.JobId then
+            TeleportService:TeleportToPlaceInstance(pid, v.id, LocalPlayer)
+            break
+        end
+    end
+end
+
+-- اللوب الرئيسي
+task.spawn(function()
+    while wait(5) do
+        pcall(function()
+            collectFruits()
+            local fruits = workspace:GetDescendants()
+            local found = false
+            for _, obj in pairs(fruits) do
+                if obj:IsA("Tool") and string.lower(obj.Name):find("fruit") then
+                    found = true break
+                end
+            end
+            if not found and settings.AutoHop then
+                serverHop()
+            end
+        end)
+    end
+end)
+
+-- Auto Restart بعد Hop
+local ScriptURL = "https://raw.githubusercontent.com/yourgithubusername/yourrepo/main/autofruit.lua"
+local queue_on_teleport = queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport
 if queue_on_teleport then
-	queue_on_teleport('loadstring(game:HttpGet("'..ScriptURL..'"))()')
+    queue_on_teleport('loadstring(game:HttpGet("'..ScriptURL..'"))()')
 end
