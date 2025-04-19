@@ -3,9 +3,7 @@ local TeleportService = game:GetService("TeleportService")
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local RunService = game:GetService("RunService")
 
--- ملف الحفظ
 local configFile = "thamer_config.json"
 local settings = {
     AutoCollect = true,
@@ -33,7 +31,6 @@ local function saveSettings()
 end
 
 if settings.AntiAFK then
-    game:GetService("VirtualInputManager"):SendKeyEvent(true, "Space", false, game)
     task.spawn(function()
         while true do
             wait(170)
@@ -64,6 +61,7 @@ if settings.AntiDrown then
     end)
 end
 
+-- GUI
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "ThamerFruitGui"
 
@@ -84,7 +82,7 @@ mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
 mainFrame.BorderSizePixel = 1
 mainFrame.Visible = false
 
-local function createToggle(name, default, pos, callback)
+local function createToggle(name, default, pos)
     local btn = Instance.new("TextButton", mainFrame)
     btn.Size = UDim2.new(0, 280, 0, 30)
     btn.Position = UDim2.new(0, 10, 0, pos)
@@ -97,7 +95,6 @@ local function createToggle(name, default, pos, callback)
         settings[name] = not settings[name]
         btn.Text = name .. ": " .. (settings[name] and "ON" or "OFF")
         saveSettings()
-        if callback then callback(settings[name]) end
     end)
 end
 
@@ -112,11 +109,12 @@ toggleButton.MouseButton1Click:Connect(function()
     toggleButton.Text = mainFrame.Visible and "إغلاق" or "فتح"
 end)
 
+-- الفواكه
 local function notify(text)
     game.StarterGui:SetCore("SendNotification", {
-        Title = "تنبيه فاكهة",
+        Title = "فاكهة!",
         Text = text,
-        Duration = 5
+        Duration = 4
     })
 end
 
@@ -179,9 +177,8 @@ task.spawn(function()
     while wait(5) do
         pcall(function()
             collectFruits()
-            local fruits = workspace:GetDescendants()
             local found = false
-            for _, obj in pairs(fruits) do
+            for _, obj in pairs(workspace:GetDescendants()) do
                 if obj:IsA("Tool") and string.lower(obj.Name):find("fruit") then
                     found = true break
                 end
@@ -193,7 +190,8 @@ task.spawn(function()
     end
 end)
 
-local ScriptURL = "https://raw.githubusercontent.com/yourusername/yourrepo/main/autofruit.lua"
+-- إعادة تشغيل تلقائي بعد السيرفر هوب
+local ScriptURL = "https://raw.githubusercontent.com/2tt7t/bloxfruit-scripts/main/autofruit.lua"
 local queue_on_teleport = queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport
 if queue_on_teleport then
     queue_on_teleport('loadstring(game:HttpGet("'..ScriptURL..'"))()')
