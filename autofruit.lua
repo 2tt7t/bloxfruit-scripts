@@ -15,7 +15,6 @@ local settings = {
     AntiDrown = true
 }
 
--- تحميل الإعدادات من الملف
 if isfile and readfile and isfile(configFile) then
     local success, data = pcall(function()
         return HttpService:JSONDecode(readfile(configFile))
@@ -27,14 +26,12 @@ if isfile and readfile and isfile(configFile) then
     end
 end
 
--- حفظ الإعدادات
 local function saveSettings()
     if writefile then
         writefile(configFile, HttpService:JSONEncode(settings))
     end
 end
 
--- حماية من الطرد AFK
 if settings.AntiAFK then
     game:GetService("VirtualInputManager"):SendKeyEvent(true, "Space", false, game)
     task.spawn(function()
@@ -45,7 +42,6 @@ if settings.AntiAFK then
     end)
 end
 
--- تحسين الأداء
 if settings.MaxPerformance then
     settings().Rendering.QualityLevel = Enum.QualityLevel.Level01
     for _, v in pairs(workspace:GetDescendants()) do
@@ -54,7 +50,6 @@ if settings.MaxPerformance then
     end
 end
 
--- حماية من الغرق
 if settings.AntiDrown then
     task.spawn(function()
         while true do
@@ -69,7 +64,6 @@ if settings.AntiDrown then
     end)
 end
 
--- واجهة GUI وزر فتح/إغلاق
 local gui = Instance.new("ScreenGui", game.CoreGui)
 gui.Name = "ThamerFruitGui"
 
@@ -88,7 +82,9 @@ mainFrame.Position = UDim2.new(0, 10, 0, 240)
 mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 mainFrame.BorderColor3 = Color3.fromRGB(255, 0, 0)
 mainFrame.BorderSizePixel = 1
-mainFrame.Visible = falselocal function createToggle(name, default, pos, callback)
+mainFrame.Visible = false
+
+local function createToggle(name, default, pos, callback)
     local btn = Instance.new("TextButton", mainFrame)
     btn.Size = UDim2.new(0, 280, 0, 30)
     btn.Position = UDim2.new(0, 10, 0, pos)
@@ -105,20 +101,17 @@ mainFrame.Visible = falselocal function createToggle(name, default, pos, callbac
     end)
 end
 
--- أزرار القائمة
 createToggle("AutoCollect", settings.AutoCollect, 10)
 createToggle("AutoHop", settings.AutoHop, 50)
 createToggle("MaxPerformance", settings.MaxPerformance, 90)
 createToggle("AntiAFK", settings.AntiAFK, 130)
 createToggle("AntiDrown", settings.AntiDrown, 170)
 
--- زر إغلاق القائمة
 toggleButton.MouseButton1Click:Connect(function()
     mainFrame.Visible = not mainFrame.Visible
     toggleButton.Text = mainFrame.Visible and "إغلاق" or "فتح"
 end)
 
--- تنبيه + ESP + تجميع + هوب
 local function notify(text)
     game.StarterGui:SetCore("SendNotification", {
         Title = "تنبيه فاكهة",
@@ -182,7 +175,6 @@ local function serverHop()
     end
 end
 
--- اللوب الرئيسي
 task.spawn(function()
     while wait(5) do
         pcall(function()
@@ -201,8 +193,7 @@ task.spawn(function()
     end
 end)
 
--- Auto Restart بعد Hop
-local ScriptURL = "https://raw.githubusercontent.com/yourgithubusername/yourrepo/main/autofruit.lua"
+local ScriptURL = "https://raw.githubusercontent.com/yourusername/yourrepo/main/autofruit.lua"
 local queue_on_teleport = queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport
 if queue_on_teleport then
     queue_on_teleport('loadstring(game:HttpGet("'..ScriptURL..'"))()')
