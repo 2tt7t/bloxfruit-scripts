@@ -71,12 +71,13 @@ gui.Name = "ThamerFruitGui"
 
 local toggleButton = Instance.new("TextButton", gui)
 toggleButton.Size = UDim2.new(0, 80, 0, 30)
-toggleButton.Position = UDim2.new(0, 10, 0, 200)
+toggleButton.Position = UDim2.new(0.5, -40, 0.5, -15)
 toggleButton.Text = "فتح"
 toggleButton.BackgroundColor3 = Color3.fromRGB(30, 0, 0)
 toggleButton.TextColor3 = Color3.new(1, 1, 1)
 toggleButton.Font = Enum.Font.GothamBold
-toggleButton.TextSize = 14local mainFrame = Instance.new("Frame", gui)
+toggleButton.TextSize = 14
+local mainFrame = Instance.new("Frame", gui)
 mainFrame.Size = UDim2.new(0, 300, 0, 250)
 mainFrame.Position = UDim2.new(0, 10, 0, 240)
 mainFrame.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
@@ -132,7 +133,8 @@ local function createESP(obj, label)
     txt.TextColor3 = Color3.fromRGB(255, 0, 0)
     txt.TextScaled = true
     txt.Font = Enum.Font.GothamBold
-endlocal function flyTo(pos)
+end
+local function flyTo(pos)
     local hrp = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
     if not hrp then return end
     for i = 1, 20 do
@@ -160,7 +162,6 @@ local function collectFruits()
         end
     end
 end
-
 local function serverHop()
     local pid = game.PlaceId
     local servers = HttpService:JSONDecode(game:HttpGet("https://games.roblox.com/v1/games/" .. pid .. "/servers/Public?limit=100&sortOrder=Asc")).data
@@ -188,10 +189,11 @@ task.spawn(function()
             end
         end)
     end
-end)-- إعادة تشغيل تلقائي بعد السيرفر هوب
+end)
+
+-- إعادة تشغيل تلقائي بعد السيرفر هوب
 local ScriptURL = "https://raw.githubusercontent.com/2tt7t/bloxfruit-scripts/main/autofruit.lua"
-local queue_on_teleport =
-    queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport
+local queue_on_teleport = queue_on_teleport or syn and syn.queue_on_teleport or fluxus and fluxus.queue_on_teleport
 if queue_on_teleport then
     queue_on_teleport('loadstring(game:HttpGet("' .. ScriptURL .. '"))()')
 end
